@@ -404,7 +404,7 @@
 
     <div class="two-col">
       <div class="card">
-        <p class="card-title">Financial Runway</p>
+        <p class="card-title">Financial Runway &ndash; 1 Year of Savings</p>
         <div class="runway-inner">
           <div class="runway-num" id="runway-months">&mdash;</div>
           <p class="runway-unit">months estimated</p>
@@ -554,8 +554,8 @@ function paint(d) {
   document.getElementById('runway-months').textContent = runway.toFixed(1);
   document.getElementById('runway-fill').style.width   = Math.min(100, (runway / 12) * 100) + '%';
   document.getElementById('runway-explanation').textContent = mSavings >= 0
-    ? 'If you keep saving at this rate for a year, your savings would cover about ' + runway.toFixed(1) + ' months of spending.'
-    : 'Spending exceeds income by ' + money(Math.abs(mSavings), cur) + '/mo — savings are shrinking. At this rate, your savings would cover about ' + runway.toFixed(1) + ' months of spending after a year.';
+    ? 'Based on your current closing balance of ' + money(closing, cur) + ' and average monthly spend of ' + money(mSpend, cur) + ', and you were to save the remainder for a year, you would have approximately ' + runway.toFixed(1) + ' months of runway.'
+    : 'Based on your current closing balance of ' + money(closing, cur) + ' and average monthly spend of ' + money(mSpend, cur) + ', spending is exceeding income by ' + money(Math.abs(mSavings), cur) + '/mo — you would have approximately ' + runway.toFixed(1) + ' months of runway after a year.';
   document.getElementById('summary-text').textContent  = d.summary || '';
 }
 
