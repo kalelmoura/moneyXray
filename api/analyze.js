@@ -12,10 +12,6 @@ const SCHEMA_EXAMPLE = JSON.stringify({
   subscriptions: [
     { name: 'Netflix', emoji: '📺', monthlyAmount: 15.99, annualCost: 191.88 },
   ],
-  runway: {
-    months: 5.6,
-    explanation: 'At your current spending rate your savings cover about 5.6 months of expenses.',
-  },
   summary: 'Your top expense is groceries at 26%. Seven subscriptions cost £1,308/year — review any unused ones. You\'re saving well each month.',
 }, null, 2);
 
@@ -30,7 +26,8 @@ ANALYSIS RULES:
 - If all amounts are positive, look for salary/wages keywords; everything else is spending.
 - Group transactions into 5–10 meaningful spending categories with appropriate emojis.
 - Identify recurring subscriptions: same merchant, consistent amount (≤£150/month), regular cadence.
-- Estimate runway = estimated current savings ÷ average monthly spend. If savings cannot be determined, use 3× average monthly spend as a conservative estimate.
+- CRITICAL: Every transaction must appear in exactly ONE category. Category totals must sum to exactly totalSpend. Do not count any transaction twice.
+- The subscriptions array is metadata only — do NOT create a separate "Subscriptions" spending category. Each subscription belongs under its natural category (e.g. EE Mobile → Bills & Utilities, Netflix → Entertainment). Its amount is counted there and nowhere else.
 - Write a friendly, specific 2–3 sentence summary with ONE actionable financial tip.
 
 RESPOND WITH THIS EXACT JSON STRUCTURE (every field required, no extra fields):

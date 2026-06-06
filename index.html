@@ -544,10 +544,29 @@ function paint(d) {
   paintCats(d.categories || [], cur);
   paintSubs(subs, cur);
 
-  var rm = parseFloat((d.runway && d.runway.months) || 0) || 0;
-  document.getElementById('runway-months').textContent = rm > 0 ? rm.toFixed(1) : '—';
-  document.getElementById('runway-fill').style.width   = Math.min(100, (rm / 12) * 100) + '%';
-  document.getElementById('runway-explanation').textContent = (d.runway && d.runway.explanation) || '';
+  var monthlyIncome  = d.totalIncome > 0 ? d.totalIncome / Math.max(d.periodMonths || 1, 1) : 0;
+  var monthlySpend   = d.avgMonthlySpend || 0;
+  var monthlySavings = monthlyIncome - monthlySpend;
+  var closingBalance = (d.totalIncome || 0) - (d.totalSpend || 0);
+  var projSavings    = closingBalance + monthlySavings * 12;
+  var runway         = (monthlySpend > 0 && projSavings > 0) ? projSavings / monthlySpend : 0;
+
+  document.getElementById('runway-months').textContent = runway > 0 ? runway.toFixed(1) : '0.0';
+  document.getElementById('runway-fill').style.width   = Math.min(100, (runway / 12) * 100) + '%';
+
+  var runwayExpl;
+  if (monthlySavings >= 0) {
+    runwayExpl = 'Saving ' + money(monthlySavings, cur) + '/mo (income − spending). '
+      + 'Net balance from this statement: ' + money(closingBalance, cur) + '. '
+      + 'Saving at this rate for 12 months gives projected savings of ' + money(Math.max(0, projSavings), cur)
+      + ' — covering ' + (runway > 0 ? runway.toFixed(1) : '0.0') + ' months of expenses.';
+  } else {
+    runwayExpl = 'Spending exceeds income by ' + money(Math.abs(monthlySavings), cur) + '/mo. '
+      + 'Net balance of ' + money(closingBalance, cur) + ' would shrink to '
+      + money(Math.max(0, projSavings), cur) + ' after 12 months, covering '
+      + (runway > 0 ? runway.toFixed(1) : '0.0') + ' months of expenses.';
+  }
+  document.getElementById('runway-explanation').textContent = runwayExpl;
   document.getElementById('summary-text').textContent  = d.summary || '';
 }
 
