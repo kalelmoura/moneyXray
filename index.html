@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Money X&#x2011;Ray — AI Bank Statement Analyser</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #07101f;
+      --card:      #0d1929;
+      --border:    #1c3150;
+      --accent:    #60a5fa;
+      --adim:      rgba(96,165,250,.12);
+      --success:   #22c55e;
+      --danger:    #f87171;
+      --warn:      #fb923c;
+      --text:      #f1f5f9;
+      --sub:       #94a3b8;
+      --muted:     #4b637a;
+      --r:         16px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ─────────────────────────────────────────── */
+    header {
+      text-align: center;
+      padding: 2.25rem 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo { font-size: 1.5rem; font-weight: 900; letter-spacing: -.03em; }
+    .logo span {
+      background: linear-gradient(135deg,#60a5fa,#a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .tagline { color: var(--muted); font-size: .8rem; margin-top: .3rem; }
+
+    /* ── Container ──────────────────────────────────────── */
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+
+    /* ── Upload ─────────────────────────────────────────── */
+    #upload-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2.5rem;
+      padding-top: .5rem;
+    }
+    .upload-intro { text-align: center; max-width: 560px; }
+    .upload-intro h1 {
+      font-size: 2.6rem; font-weight: 900; line-height: 1.12;
+      margin-bottom: .9rem;
+    }
+    .upload-intro h1 em {
+      font-style: normal;
+      background: linear-gradient(130deg,#60a5fa 0%,#c084fc 50%,#f472b6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .upload-intro p { color: var(--sub); font-size: 1rem; line-height: 1.65; }
+
+    .drop-zone {
+      width: 100%; max-width: 520px;
+      background: var(--card);
+      border: 2px dashed var(--border);
+      border-radius: var(--r);
+      padding: 3rem 2.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+    }
+    .drop-zone:hover, .drop-zone.over {
+      border-color: var(--accent);
+      background: var(--adim);
+    }
+    .drop-icon { font-size: 2.75rem; margin-bottom: 1rem; display: block; pointer-events: none; }
+    .drop-zone h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: .35rem; pointer-events: none; }
+    .drop-zone > p { color: var(--sub); font-size: .85rem; pointer-events: none; }
+
+    .btn-upload {
+      display: inline-block; margin-top: 1.4rem;
+      padding: .65rem 1.75rem;
+      background: var(--accent); color: #05101d;
+      font-weight: 700; font-size: .875rem;
+      border-radius: 8px; border: none; cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn-upload:hover { opacity: .85; }
+    .sample-hint { font-size: .78rem; color: var(--muted); margin-top: .75rem; }
+    .sample-hint a { color: var(--accent); text-decoration: none; }
+    .sample-hint a:hover { text-decoration: underline; }
+    #file-input { display: none; }
+
+    /* ── Loading ────────────────────────────────────────── */
+    #loading-section {
+      display: none;
+      flex-direction: column; align-items: center; justify-content: center;
+      min-height: 55vh; gap: 1.5rem; text-align: center;
+    }
+    .spinner {
+      width: 52px; height: 52px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-title { font-size: 1.15rem; font-weight: 600; }
+    .loading-sub   { color: var(--sub); font-size: .875rem; }
+
+    /* ── Dashboard / Fallback ────────────────────────────── */
+    #dashboard-section { display: none; animation: fadeUp .45s ease both; }
+    #fallback-section  { display: none; animation: fadeUp .45s ease both; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    .section-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1.75rem; flex-wrap: wrap; gap: .75rem;
+    }
+    .section-label {
+      font-size: .65rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .14em; color: var(--muted);
+    }
+    .btn-back {
+      padding: .4rem 1rem;
+      background: transparent; color: var(--sub);
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: .8rem; cursor: pointer; transition: all .2s;
+    }
+    .btn-back:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Hero card */
+    .hero-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 2.75rem 2rem;
+      text-align: center; margin-bottom: 1.2rem;
+      position: relative; overflow: hidden;
+    }
+    .hero-card::before {
+      content: ''; position: absolute;
+      top: 0; left: 20%; right: 20%; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(249,115,22,.5), transparent);
+    }
+    .hero-card::after {
+      content: ''; position: absolute;
+      top: -60px; left: 50%; transform: translateX(-50%);
+      width: 300px; height: 120px;
+      background: radial-gradient(ellipse, rgba(249,115,22,.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-eyebrow {
+      font-size: .65rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .16em;
+      color: var(--muted); margin-bottom: .65rem;
+    }
+    .hero-amount {
+      font-size: 5.5rem; font-weight: 900; line-height: 1;
+      background: linear-gradient(135deg,#f97316,#ef4444);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: .4rem;
+    }
+    .hero-period { font-size: .875rem; color: var(--muted); }
+
+    /* Stats row */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 1rem; margin-bottom: 1.2rem;
+    }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.25rem 1.5rem;
+    }
+    .stat-label {
+      font-size: .65rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .12em;
+      color: var(--muted); margin-bottom: .45rem;
+    }
+    .stat-val  { font-size: 1.8rem; font-weight: 800; }
+    .stat-note { font-size: .72rem; color: var(--muted); margin-top: .2rem; }
+
+    /* Two-column grid */
+    .two-col {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 1.2rem; margin-bottom: 1.2rem;
+    }
+
+    /* Generic card */
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 1.5rem;
+    }
+    .card-title {
+      font-size: .65rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .14em;
+      color: var(--muted); margin-bottom: 1.25rem;
+    }
+
+    /* Doughnut chart */
+    .chart-wrap { height: 230px; position: relative; }
+
+    /* Category rows */
+    .cat-list { display: flex; flex-direction: column; gap: .75rem; }
+    .cat-row  { display: flex; align-items: center; gap: .6rem; }
+    .cat-dot  { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .cat-name {
+      font-size: .83rem; font-weight: 500; flex: 1;
+      min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .cat-track { flex: 1.5; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .cat-fill  { height: 100%; border-radius: 2px; }
+    .cat-amt   { font-size: .83rem; font-weight: 700; min-width: 70px; text-align: right; }
+    .cat-pct   { font-size: .72rem; color: var(--muted); min-width: 34px; text-align: right; }
+
+    /* Subscriptions */
+    .sub-wrap { margin-bottom: 1.2rem; }
+    .sub-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(255px, 1fr));
+      gap: .75rem;
+    }
+    .sub-row {
+      display: flex; align-items: center; gap: .875rem;
+      padding: .875rem 1rem;
+      background: rgba(255,255,255,.025);
+      border: 1px solid rgba(255,255,255,.04);
+      border-radius: 10px;
+    }
+    .sub-icon   { font-size: 1.3rem; width: 38px; text-align: center; flex-shrink: 0; }
+    .sub-info   { flex: 1; min-width: 0; }
+    .sub-name   {
+      font-size: .875rem; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sub-freq   { font-size: .72rem; color: var(--muted); }
+    .sub-cost   { text-align: right; flex-shrink: 0; }
+    .sub-annual { font-size: .9rem; font-weight: 700; color: var(--danger); }
+    .sub-peryear{ font-size: .65rem; color: var(--muted); }
+
+    /* Runway */
+    .runway-inner { text-align: center; padding: .25rem 0 .75rem; }
+    .runway-num {
+      font-size: 4.5rem; font-weight: 900; line-height: 1;
+      background: linear-gradient(135deg,#22d3ee,#22c55e);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .runway-unit { font-size: .875rem; color: var(--sub); margin-top: .2rem; }
+    .runway-track {
+      height: 6px; background: var(--border); border-radius: 3px;
+      margin: 1rem 0 .875rem; overflow: hidden;
+    }
+    .runway-fill {
+      height: 100%; border-radius: 3px;
+      background: linear-gradient(90deg,#22d3ee,#22c55e);
+      transition: width .6s ease;
+    }
+    .runway-expl { font-size: .85rem; color: var(--sub); line-height: 1.7; }
+
+    /* AI badge + summary */
+    .ai-badge {
+      display: inline-flex; align-items: center; gap: .3rem;
+      font-size: .65rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .1em;
+      color: var(--accent); background: var(--adim);
+      padding: .25rem .65rem; border-radius: 100px;
+      margin-bottom: 1rem;
+    }
+    .ai-text { font-size: .9rem; color: var(--sub); line-height: 1.85; }
+
+    /* Fallback */
+    .warn-banner {
+      background: rgba(251,146,60,.08);
+      border: 1px solid rgba(251,146,60,.25);
+      border-radius: 12px; padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+      font-size: .875rem; color: #fb923c; line-height: 1.65;
+    }
+    .fallback-total { text-align: center; margin-bottom: 1.75rem; }
+    .fallback-big {
+      font-size: 2.75rem; font-weight: 800;
+      background: linear-gradient(135deg,#f97316,#ef4444);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .fallback-note { font-size: .78rem; color: var(--muted); margin-top: .35rem; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+    th {
+      text-align: left; padding: .6rem 1rem;
+      font-size: .65rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .12em;
+      color: var(--muted); border-bottom: 1px solid var(--border);
+    }
+    td { padding: .6rem 1rem; border-bottom: 1px solid rgba(255,255,255,.03); color: var(--sub); }
+    tr:last-child td { border-bottom: none; }
+    .pos { color: var(--success); font-weight: 600; }
+    .neg { color: var(--danger);  font-weight: 600; }
+
+    /* Responsive */
+    @media (max-width: 760px) {
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .two-col   { grid-template-columns: 1fr; }
+      .hero-amount { font-size: 3.75rem; }
+      .upload-intro h1 { font-size: 2rem; }
+    }
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: 1fr; }
+      .hero-amount { font-size: 2.9rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Money<span>X&#x2011;Ray</span></div>
+  <p class="tagline">AI-powered bank statement analysis in seconds</p>
+</header>
+
+<div class="wrap">
+
+  <!-- ── Upload ───────────────────────────────────────────────── -->
+  <section id="upload-section">
+    <div class="upload-intro">
+      <h1>X&#x2011;Ray your <em>finances</em></h1>
+      <p>Upload a CSV bank statement and get an instant AI breakdown of your spending habits, recurring subscriptions, and how long your money will last.</p>
+    </div>
+    <div class="drop-zone" id="drop-zone" role="button" aria-label="Upload CSV file">
+      <span class="drop-icon">📊</span>
+      <h3>Drop your CSV here</h3>
+      <p>Supports any bank export with date, description &amp; amount columns</p>
+      <button class="btn-upload" type="button" id="btn-upload">Choose CSV file</button>
+      <p class="sample-hint">No file handy? <a href="sample.csv" download>Download sample data</a></p>
+      <input type="file" id="file-input" accept=".csv,.txt" />
+    </div>
+  </section>
+
+  <!-- ── Loading ──────────────────────────────────────────────── -->
+  <section id="loading-section">
+    <div class="spinner"></div>
+    <p class="loading-title">Analysing your finances&hellip;</p>
+    <p class="loading-sub">AI is categorising transactions and spotting patterns</p>
+  </section>
+
+  <!-- ── Dashboard ────────────────────────────────────────────── -->
+  <section id="dashboard-section">
+    <div class="section-header">
+      <span class="section-label">Financial X&#x2011;Ray Report</span>
+      <button class="btn-back" id="btn-back">&#x2190; Analyse another</button>
+    </div>
+
+    <div class="hero-card">
+      <p class="hero-eyebrow">Total Spending Analysed</p>
+      <div class="hero-amount" id="hero-amount">£0.00</div>
+      <p class="hero-period" id="hero-period">&mdash; months</p>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <p class="stat-label">Avg Monthly Spend</p>
+        <div class="stat-val" id="stat-monthly">&mdash;</div>
+        <p class="stat-note">per month average</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Total Income</p>
+        <div class="stat-val" id="stat-income">&mdash;</div>
+        <p class="stat-note">received in period</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Subscriptions</p>
+        <div class="stat-val" id="stat-subs">&mdash;</div>
+        <p class="stat-note" id="stat-subs-note"></p>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <p class="card-title">Spending Breakdown</p>
+        <div class="chart-wrap">
+          <canvas id="spending-chart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <p class="card-title">By Category</p>
+        <div class="cat-list" id="cat-list"></div>
+      </div>
+    </div>
+
+    <div class="card sub-wrap">
+      <p class="card-title">Recurring Subscriptions</p>
+      <div class="sub-grid" id="sub-list"></div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <p class="card-title">Financial Runway</p>
+        <div class="runway-inner">
+          <div class="runway-num" id="runway-months">&mdash;</div>
+          <p class="runway-unit">months estimated</p>
+        </div>
+        <div class="runway-track">
+          <div class="runway-fill" id="runway-fill" style="width:0"></div>
+        </div>
+        <p class="runway-expl" id="runway-explanation"></p>
+      </div>
+      <div class="card">
+        <p class="card-title">AI Summary</p>
+        <div class="ai-badge">&#x2736; AI Insight</div>
+        <p class="ai-text" id="summary-text"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Fallback ──────────────────────────────────────────────── -->
+  <section id="fallback-section">
+    <div class="section-header">
+      <span class="section-label">Basic Breakdown (Offline Mode)</span>
+      <button class="btn-back" id="btn-back-fallback">&#x2190; Upload another</button>
+    </div>
+    <div class="warn-banner">
+      &#x26A0;&#xFE0F; AI analysis unavailable &mdash; showing raw transaction data parsed locally.
+      Check that <code>ANTHROPIC_API_KEY</code> is set correctly and try again.
+    </div>
+    <div class="fallback-total">
+      <p style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:.4rem">
+        Total Spending Detected
+      </p>
+      <div class="fallback-big" id="fallback-amount">£0.00</div>
+      <p class="fallback-note" id="fallback-note"></p>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Description</th><th>Amount</th></tr></thead>
+          <tbody id="fallback-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ── Palette ──────────────────────────────────────────────────── */
+const PAL = [
+  '#60a5fa','#a78bfa','#34d399','#fb923c','#f87171',
+  '#22d3ee','#fbbf24','#e879f9','#4ade80','#f43f5e',
+];
+
+/* ── DOM ──────────────────────────────────────────────────────── */
+const $upload   = document.getElementById('upload-section');
+const $loading  = document.getElementById('loading-section');
+const $dash     = document.getElementById('dashboard-section');
+const $fallback = document.getElementById('fallback-section');
+const $drop     = document.getElementById('drop-zone');
+const $file     = document.getElementById('file-input');
+
+/* ── Section switcher ─────────────────────────────────────────── */
+function show(name) {
+  $upload.style.display   = name === 'upload'   ? 'flex'  : 'none';
+  $loading.style.display  = name === 'loading'  ? 'flex'  : 'none';
+  $dash.style.display     = name === 'dash'     ? 'block' : 'none';
+  $fallback.style.display = name === 'fallback' ? 'block' : 'none';
+}
+
+/* ── Upload wiring ────────────────────────────────────────────── */
+document.getElementById('btn-upload').addEventListener('click', (e) => {
+  e.stopPropagation();
+  $file.click();
+});
+$drop.addEventListener('click', () => $file.click());
+$drop.addEventListener('dragover', (e) => { e.preventDefault(); $drop.classList.add('over'); });
+$drop.addEventListener('dragleave', () => $drop.classList.remove('over'));
+$drop.addEventListener('drop', (e) => {
+  e.preventDefault();
+  $drop.classList.remove('over');
+  const f = e.dataTransfer.files[0];
+  if (f) handleFile(f);
+});
+$file.addEventListener('change', (e) => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+document.getElementById('btn-back').addEventListener('click', () => { $file.value = ''; show('upload'); });
+document.getElementById('btn-back-fallback').addEventListener('click', () => { $file.value = ''; show('upload'); });
+
+/* ── Core handler ─────────────────────────────────────────────── */
+async function handleFile(file) {
+  if (!/\.csv$/i.test(file.name)) { alert('Please upload a .csv file'); return; }
+  const csv = await file.text();
+  show('loading');
+  try {
+    const res = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ csv }),
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    paint(data);
+    show('dash');
+  } catch (err) {
+    console.error('AI analysis failed:', err);
+    paintFallback(parseCSV(csv));
+    show('fallback');
+  }
+}
+
+/* ── Currency formatter ───────────────────────────────────────── */
+function money(n, cur) {
+  cur = cur || '£';
+  return cur + (Math.abs(parseFloat(n) || 0)).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+/* ── Dashboard renderer ───────────────────────────────────────── */
+var chart = null;
+
+function paint(d) {
+  var cur = d.currency || '£';
+
+  document.getElementById('hero-amount').textContent = money(d.totalSpend, cur);
+  document.getElementById('hero-period').textContent = 'over ' + (d.periodMonths || '?') + ' months';
+
+  document.getElementById('stat-monthly').textContent = money(d.avgMonthlySpend, cur);
+  document.getElementById('stat-income').textContent  = d.totalIncome > 0 ? money(d.totalIncome, cur) : '—';
+
+  var subs  = d.subscriptions || [];
+  var subMo = subs.reduce(function(s,x){ return s + (parseFloat(x.monthlyAmount)||0); }, 0);
+  var subYr = subs.reduce(function(s,x){ return s + (parseFloat(x.annualCost)||0); }, 0);
+  document.getElementById('stat-subs').textContent      = subMo > 0 ? money(subMo, cur) + '/mo' : '—';
+  document.getElementById('stat-subs-note').textContent = subYr > 0 ? money(subYr, cur) + ' per year' : '';
+
+  paintChart(d.categories || [], cur);
+  paintCats(d.categories || [], cur);
+  paintSubs(subs, cur);
+
+  var rm = parseFloat((d.runway && d.runway.months) || 0) || 0;
+  document.getElementById('runway-months').textContent = rm > 0 ? rm.toFixed(1) : '—';
+  document.getElementById('runway-fill').style.width   = Math.min(100, (rm / 12) * 100) + '%';
+  document.getElementById('runway-explanation').textContent = (d.runway && d.runway.explanation) || '';
+  document.getElementById('summary-text').textContent  = d.summary || '';
+}
+
+function paintChart(cats, cur) {
+  if (chart) { chart.destroy(); chart = null; }
+  if (!cats.length) return;
+  var top = cats.slice(0, 9);
+  chart = new Chart(document.getElementById('spending-chart'), {
+    type: 'doughnut',
+    data: {
+      labels: top.map(function(c){ return c.name; }),
+      datasets: [{
+        data: top.map(function(c){ return parseFloat(c.total) || 0; }),
+        backgroundColor: PAL.slice(0, top.length),
+        borderWidth: 2,
+        borderColor: '#0d1929',
+        hoverBorderColor: '#1c3150',
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '68%',
+      animation: { duration: 700, easing: 'easeOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) { return ' ' + ctx.label + ': ' + money(ctx.parsed, cur); },
+          },
+        },
+      },
+    },
+  });
+}
+
+function paintCats(cats, cur) {
+  var el = document.getElementById('cat-list');
+  el.innerHTML = '';
+  cats.forEach(function(c, i) {
+    var col = PAL[i % PAL.length];
+    var pct = Math.min(100, Math.max(0, parseFloat(c.percentage) || 0));
+    el.insertAdjacentHTML('beforeend',
+      '<div class="cat-row">' +
+        '<span class="cat-dot" style="background:' + col + '"></span>' +
+        '<span class="cat-name">' + esc(c.emoji || '') + ' ' + esc(c.name) + '</span>' +
+        '<div class="cat-track"><div class="cat-fill" style="width:' + pct + '%;background:' + col + '"></div></div>' +
+        '<span class="cat-amt">' + money(c.total, cur) + '</span>' +
+        '<span class="cat-pct">' + pct.toFixed(0) + '%</span>' +
+      '</div>');
+  });
+}
+
+function paintSubs(subs, cur) {
+  var el = document.getElementById('sub-list');
+  el.innerHTML = '';
+  if (!subs.length) {
+    el.insertAdjacentHTML('beforeend', '<p style="color:var(--muted);font-size:.875rem">No recurring subscriptions detected.</p>');
+    return;
+  }
+  subs.forEach(function(s) {
+    el.insertAdjacentHTML('beforeend',
+      '<div class="sub-row">' +
+        '<span class="sub-icon">' + esc(s.emoji || '📌') + '</span>' +
+        '<div class="sub-info">' +
+          '<div class="sub-name">' + esc(s.name) + '</div>' +
+          '<div class="sub-freq">' + money(s.monthlyAmount, cur) + ' / month</div>' +
+        '</div>' +
+        '<div class="sub-cost">' +
+          '<div class="sub-annual">' + money(s.annualCost, cur) + '</div>' +
+          '<div class="sub-peryear">/ year</div>' +
+        '</div>' +
+      '</div>');
+  });
+}
+
+/* ── Fallback renderer ────────────────────────────────────────── */
+function paintFallback(txns) {
+  var spent = txns.filter(function(t){ return t.amount < 0; });
+  var total = spent.reduce(function(s,t){ return s + Math.abs(t.amount); }, 0);
+  document.getElementById('fallback-amount').textContent =
+    '\xA3' + total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  document.getElementById('fallback-note').textContent =
+    spent.length + ' spending transactions out of ' + txns.length + ' total';
+  var tbody = document.getElementById('fallback-tbody');
+  tbody.innerHTML = '';
+  txns.slice(0, 150).forEach(function(t) {
+    var cls  = t.amount >= 0 ? 'pos' : 'neg';
+    var sign = t.amount >= 0 ? '+' : '−';
+    tbody.insertAdjacentHTML('beforeend',
+      '<tr>' +
+        '<td>' + esc(t.date || '—') + '</td>' +
+        '<td>' + esc(t.description || '—') + '</td>' +
+        '<td class="' + cls + '">' + sign + '\xA3' + Math.abs(t.amount).toFixed(2) + '</td>' +
+      '</tr>');
+  });
+}
+
+/* ── CSV parser ───────────────────────────────────────────────── */
+function parseCSV(text) {
+  var lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  var hdrs = splitLine(lines[0]).map(function(h){ return h.toLowerCase().trim(); });
+  var di = findIdx(hdrs, ['date','dated','trans date','transaction date']);
+  var xi = findIdx(hdrs, ['description','desc','narrative','details','payee','memo','reference','narration']);
+  var ai = findIdx(hdrs, ['amount','debit','credit','value','sum','transaction amount']);
+  if (ai < 0) return [];
+  var rows = [];
+  for (var i = 1; i < lines.length; i++) {
+    var line = lines[i].trim();
+    if (!line) continue;
+    var cols = splitLine(line);
+    var raw  = (cols[ai] || '').replace(/[\xA3\$€, ]/g, '');
+    var amt  = parseFloat(raw);
+    if (isNaN(amt)) continue;
+    rows.push({
+      date:        (cols[di >= 0 ? di : 0] || '').trim(),
+      description: (cols[xi >= 0 ? xi : 1] || '').trim(),
+      amount: amt,
+    });
+  }
+  return rows;
+}
+
+function splitLine(line) {
+  var out = [], f = '', q = false;
+  for (var i = 0; i < line.length; i++) {
+    var c = line[i];
+    if (c === '"') {
+      if (q && line[i+1] === '"') { f += '"'; i++; }
+      else q = !q;
+    } else if (c === ',' && !q) { out.push(f); f = ''; }
+    else f += c;
+  }
+  out.push(f);
+  return out;
+}
+
+function findIdx(hdrs, names) {
+  for (var n = 0; n < names.length; n++) {
+    var i = hdrs.findIndex(function(h){ return h.indexOf(names[n]) >= 0; });
+    if (i >= 0) return i;
+  }
+  return -1;
+}
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

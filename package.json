@@ -1,0 +1,11 @@
+{
+  "name": "money-xray",
+  "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest"
+  }
+}
