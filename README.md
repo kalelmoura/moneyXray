@@ -22,6 +22,23 @@ Upload any CSV bank statement and get an instant AI breakdown of your spending c
 - 1-year financial runway projection
 - Graceful offline fallback if the API is unavailable
 
+## Future features
+
+Planned additions to turn Money X-Ray from a one-off snapshot into an ongoing tool:
+
+- [ ] Month-by-month timeline — upload a statement per month and track how
+      your spending changes over the year
+- [ ] AI Money Coach — ask follow-up questions about your finances in plain
+      English and get tailored answers
+- [ ] Financial health score — a single 0–100 verdict with a quick explanation
+- [ ] Editable categories — customise category rules instead of relying on
+      the defaults
+- [ ] Wider bank support — auto-detect different CSV layouts so any bank's
+      export works
+- [ ] Export & share — download your report as a PDF or image
+- [ ] Local-only privacy mode — run the analysis without your data leaving
+      your device
+
 ## Deploy
 
 1. Fork this repo to your own GitHub account.
