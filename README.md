@@ -24,8 +24,11 @@ Upload any CSV bank statement and get an instant AI breakdown of your spending c
 
 ## Deploy
 
-1. Import this repo into [Vercel](https://vercel.com/new)
-2. Add environment variable: `ANTHROPIC_API_KEY`
-3. Deploy — no build step needed
+1. Fork this repo to your own GitHub account.
+2. Import this repo into [Vercel](https://vercel.com/new)
+3. Add environment variable: `ANTHROPIC_API_KEY` — your own key from
+   https://console.anthropic.com.
+4. Deploy. no build step needed.
 
 A sample CSV (`sample.csv`) is included for testing.
+
