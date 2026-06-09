@@ -6,7 +6,7 @@
 
 <div align="center">
 
-# MoneX-Ray
+# MoneyX-Ray
 
 **AI-powered bank statement analysis in seconds.**
 
