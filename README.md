@@ -1,4 +1,4 @@
-<div align="right">
+<div align="left">
 
 #### Hackathon — Ripple Social Club × Living Room Labs
 
