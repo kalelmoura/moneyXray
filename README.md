@@ -22,9 +22,9 @@ Upload any CSV bank statement and get an instant AI breakdown of your spending c
 - 1-year financial runway projection
 - Graceful offline fallback if the API is unavailable
 
-## Future features
+## Improvements
 
-Planned additions to turn Money X-Ray from a one-off snapshot into an ongoing tool:
+Future features to turn Money X-Ray from a one-off snapshot into an ongoing tool:
 
 - [ ] Month-by-month timeline — upload a statement per month and track how
       your spending changes over the year
