@@ -1,8 +1,12 @@
+<div align="right">
+
+#### Hackathon — Ripple Social Club × Living Room Labs
+
+</div>
+
 <div align="center">
 
 # MoneX-Ray
-
-#### Hackathon — Ripple Social Club × Living Room Labs
 
 *AI-powered bank statement analysis in seconds.*
 
