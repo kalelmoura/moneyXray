@@ -8,12 +8,14 @@
 
 # MoneX-Ray
 
-*AI-powered bank statement analysis in seconds.*
+**AI-powered bank statement analysis in seconds.**
 
 </div>
 
-## Overview:
+### Overview:
 Upload any CSV bank statement and get an instant AI breakdown of your spending categories, recurring subscriptions, and financial runway — powered by Claude AI.
+
+---
 
 ## Features
 
