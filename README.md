@@ -13,7 +13,7 @@
 </div>
 
 ### Overview:
-Upload any CSV bank statement and get an instant AI breakdown of your spending categories, recurring subscriptions, and financial runway — powered by Claude AI.
+Upload any bank statement and get an instant AI breakdown of your spending categories, recurring subscriptions, and financial runway — powered by Claude AI.
 
 ## Features
 
@@ -33,8 +33,6 @@ Future features to turn Money X-Ray from a one-off snapshot into an ongoing tool
 - [ ] Financial health score — a single 0–100 verdict with a quick explanation
 - [ ] Editable categories — customise category rules instead of relying on
       the defaults
-- [ ] Wider bank support — auto-detect different CSV layouts so any bank's
-      export works
 - [ ] Export & share — download your report as a PDF or image
 - [ ] Local-only privacy mode — run the analysis without your data leaving
       your device
