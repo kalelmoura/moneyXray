@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(GIT_EDITOR=true git rebase --continue)",
+      "Bash(git push *)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'Move hackathon line to top-right, tagline under title *)"
+    ]
+  }
+}
