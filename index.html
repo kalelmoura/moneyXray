@@ -502,20 +502,20 @@
     <div class="upload-intro">
       <span class="eyebrow-pill">&#x2736; AI-powered financial insight</span>
       <h1>X&#x2011;Ray your <em>finances</em></h1>
-      <p>Upload a CSV bank statement and get an instant AI breakdown of your spending habits, recurring subscriptions, and how long your money will last.</p>
+      <p>Upload a bank statement and get an instant AI breakdown of your spending habits, recurring subscriptions, and how long your money will last.</p>
     </div>
-    <div class="drop-zone" id="drop-zone" role="button" aria-label="Upload CSV file">
+    <div class="drop-zone" id="drop-zone" role="button" aria-label="Upload bank statement">
       <span class="drop-icon">📊</span>
-      <h3>Drop your CSV here</h3>
-      <p>Supports any bank export with date, description &amp; amount columns</p>
-      <button class="btn-upload" type="button" id="btn-upload">Choose CSV file</button>
+      <h3>Drop your statement here</h3>
+      <p>Supports CSV, TSV, TXT, OFX, QFX, QIF, PDF &amp; Excel exports</p>
+      <button class="btn-upload" type="button" id="btn-upload">Choose file</button>
       <p class="sample-hint">No file handy? <a href="sample.csv" download>Download sample data</a></p>
-      <input type="file" id="file-input" accept=".csv,.txt" />
+      <input type="file" id="file-input" accept=".csv,.tsv,.txt,.ofx,.qfx,.qif,.pdf,.xlsx,.xls" />
     </div>
     <div class="trust-row">
       <span>&#x26A1; Results in seconds</span>
       <span>&#x1F512; Nothing stored</span>
-      <span>&#x1F4C8; Any bank's CSV</span>
+      <span>&#x1F4C8; Any bank's export</span>
     </div>
   </section>
 
@@ -664,16 +664,80 @@ $file.addEventListener('change', (e) => { if (e.target.files[0]) handleFile(e.ta
 document.getElementById('btn-back').addEventListener('click', () => { $file.value = ''; show('upload'); });
 document.getElementById('btn-back-fallback').addEventListener('click', () => { $file.value = ''; show('upload'); });
 
+/* ── File reading helpers ─────────────────────────────────────── */
+const TEXT_EXTS = ['csv', 'tsv', 'txt', 'ofx', 'qfx', 'qif'];
+
+function fileExt(name) {
+  const m = /\.([^.]+)$/.exec(name);
+  return m ? m[1].toLowerCase() : '';
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(',')[1]);
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(file);
+  });
+}
+
+let sheetJsPromise = null;
+function loadSheetJS() {
+  if (window.XLSX) return Promise.resolve();
+  if (!sheetJsPromise) {
+    sheetJsPromise = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+      s.onload = resolve;
+      s.onerror = () => reject(new Error('Could not load the Excel reader'));
+      document.head.appendChild(s);
+    });
+  }
+  return sheetJsPromise;
+}
+
+async function excelToCsv(file) {
+  await loadSheetJS();
+  const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+  return XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]);
+}
+
 /* ── Core handler ─────────────────────────────────────────────── */
 async function handleFile(file) {
-  if (!/\.csv$/i.test(file.name)) { alert('Please upload a .csv file'); return; }
-  const csv = await file.text();
+  const ext = fileExt(file.name);
+  const isText  = TEXT_EXTS.indexOf(ext) !== -1;
+  const isPdf   = ext === 'pdf';
+  const isExcel = ext === 'xlsx' || ext === 'xls';
+
+  if (!isText && !isPdf && !isExcel) {
+    alert('That file type isn\'t supported.\n\nPlease upload a bank statement as: CSV, TSV, TXT, OFX, QFX, QIF, PDF, XLSX or XLS.');
+    return;
+  }
+
   show('loading');
+  let payload, statementText = null;
+  try {
+    if (isPdf) {
+      payload = { pdf: await fileToBase64(file), mediaType: 'application/pdf' };
+    } else if (isExcel) {
+      statementText = await excelToCsv(file);
+      payload = { text: statementText };
+    } else {
+      statementText = await file.text();
+      payload = { text: statementText };
+    }
+  } catch (err) {
+    console.error('Could not read file:', err);
+    show('upload');
+    alert('Sorry, that file couldn\'t be read. Please try a different export from your bank.');
+    return;
+  }
+
   try {
     const res = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ csv }),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
@@ -682,8 +746,13 @@ async function handleFile(file) {
     show('dash');
   } catch (err) {
     console.error('AI analysis failed:', err);
-    paintFallback(parseCSV(csv));
-    show('fallback');
+    if (ext === 'csv' && statementText) {
+      paintFallback(parseCSV(statementText));
+      show('fallback');
+    } else {
+      show('upload');
+      alert('Sorry, the analysis failed. Please try again in a moment.');
+    }
   }
 }
 
@@ -700,7 +769,7 @@ function paint(d) {
   var cur = d.currency || '£';
 
   document.getElementById('hero-amount').textContent = money(d.totalSpend, cur);
-  document.getElementById('hero-period').textContent = 'over ' + (d.periodMonths || '?') + ' months';
+  document.getElementById('hero-period').textContent = 'over ' + (d.periodMonths || '?') + ' month(s)';
 
   document.getElementById('stat-monthly').textContent = money(d.avgMonthlySpend, cur);
   document.getElementById('stat-income').textContent  = d.totalIncome > 0 ? money(d.totalIncome, cur) : '—';

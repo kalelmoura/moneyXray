@@ -1,5 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 
+const PRIMARY_MODEL = 'claude-haiku-4-5';
+const PDF_FALLBACK_MODEL = 'claude-sonnet-4-6';
+
 const SCHEMA_EXAMPLE = JSON.stringify({
   currency: '£',
   totalSpend: 2867.54,
@@ -15,11 +18,11 @@ const SCHEMA_EXAMPLE = JSON.stringify({
   summary: 'Your top expense is groceries at 26%. Seven subscriptions cost £1,308/year — review any unused ones. You\'re saving well each month.',
 }, null, 2);
 
-function buildPrompt(csv) {
-  return `Analyse this bank statement CSV and respond with ONLY a valid JSON object. No markdown fences, no explanation — just the raw JSON.
-
-CSV DATA:
-${csv.slice(0, 15000)}
+function buildPrompt(inlineText) {
+  const dataSection = inlineText
+    ? `\n\nSTATEMENT DATA:\n${inlineText.slice(0, 15000)}`
+    : '';
+  return `Analyse this bank statement data and respond with ONLY a valid JSON object. No markdown fences, no explanation — just the raw JSON.${dataSection}
 
 ANALYSIS RULES:
 - Negative amounts = spending. Positive = income (salary/wages).
@@ -39,20 +42,45 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { csv } = req.body || {};
+  const { text, csv, pdf, mediaType } = req.body || {};
+  const statementText =
+    (typeof text === 'string' && text.trim().length > 0 && text) ||
+    (typeof csv === 'string' && csv.trim().length > 0 && csv) ||
+    null;
+  const isPdf = typeof pdf === 'string' && pdf.length > 0;
 
-  if (!csv || typeof csv !== 'string' || csv.trim().length === 0) {
-    return res.status(400).json({ error: 'csv field is required and must be a non-empty string' });
+  if (!statementText && !isPdf) {
+    return res.status(400).json({ error: 'Provide statement data as "text", or a base64 "pdf" with its "mediaType"' });
   }
+
+  const content = isPdf
+    ? [
+        {
+          type: 'document',
+          source: { type: 'base64', media_type: mediaType || 'application/pdf', data: pdf },
+        },
+        { type: 'text', text: buildPrompt() },
+      ]
+    : buildPrompt(statementText);
 
   try {
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-    const message = await client.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 2048,
-      messages: [{ role: 'user', content: buildPrompt(csv) }],
-    });
+    let message;
+    try {
+      message = await client.messages.create({
+        model: PRIMARY_MODEL,
+        max_tokens: 2048,
+        messages: [{ role: 'user', content }],
+      });
+    } catch (err) {
+      if (!isPdf) throw err;
+      message = await client.messages.create({
+        model: PDF_FALLBACK_MODEL,
+        max_tokens: 2048,
+        messages: [{ role: 'user', content }],
+      });
+    }
 
     const raw = (message.content[0]?.text ?? '').trim();
     const cleaned = raw
