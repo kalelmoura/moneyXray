@@ -784,14 +784,12 @@ function paint(d) {
   paintCats(d.categories || [], cur);
   paintSubs(subs, cur);
 
-  var mIncome  = d.totalIncome > 0 ? d.totalIncome / Math.max(d.periodMonths || 1, 1) : 0;
   var mSpend   = d.avgMonthlySpend || 0;
-  var mSavings = mIncome - mSpend;
   var closing  = (d.totalIncome || 0) - (d.totalSpend || 0);
   var netChange = (d.totalIncome || 0) - (d.totalSpend || 0);
 
   if (netChange > 0) {
-    var projSav = closing + mSavings * 12;
+    var projSav = closing * 12;
     var runway  = (mSpend > 0 && projSav > 0) ? projSav / mSpend : 0;
     document.getElementById('runway-months').textContent = runway.toFixed(1);
     document.getElementById('runway-fill').style.width   = Math.min(100, (runway / 12) * 100) + '%';
