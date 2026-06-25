@@ -215,6 +215,11 @@
     .sample-hint a:hover { text-decoration: underline; }
     #file-input { display: none; }
 
+    .demo-cta { text-align: center; }
+    .demo-actions { text-align: center; margin-top: 1.75rem; }
+    .demo-cta .btn-upload, .demo-actions .btn-upload { margin-top: 0; }
+    .sample-note { color: var(--sub); font-size: .92rem; line-height: 1.6; margin-bottom: 1.25rem; max-width: 640px; }
+
     .trust-row {
       display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center;
       font-size: .78rem; color: var(--muted); font-weight: 500;
@@ -240,6 +245,7 @@
     /* ── Dashboard / Fallback reveal ─────────────────────────── */
     #dashboard-section { display: none; }
     #fallback-section  { display: none; }
+    #sample-section    { display: none; }
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(24px); }
       to   { opacity: 1; transform: none; }
@@ -509,8 +515,11 @@
       <h3>Drop your statement here</h3>
       <p>Supports CSV, TSV, TXT, OFX, QFX, QIF, PDF &amp; Excel exports</p>
       <button class="btn-upload" type="button" id="btn-upload">Choose file</button>
-      <p class="sample-hint">No file handy? <a href="sample.csv" download>Download sample data</a></p>
+      <p class="sample-hint">No file handy? <a href="sample_statement.csv" download>Download sample data</a></p>
       <input type="file" id="file-input" accept=".csv,.tsv,.txt,.ofx,.qfx,.qif,.pdf,.xlsx,.xls" />
+    </div>
+    <div class="demo-cta">
+      <button class="btn-upload" type="button" id="btn-demo">Try it with a sample statement</button>
     </div>
     <div class="trust-row">
       <span>&#x26A1; Results in seconds</span>
@@ -519,10 +528,30 @@
     </div>
   </section>
 
+  <!-- ── Sample data (demo) ───────────────────────────────────── -->
+  <section id="sample-section">
+    <div class="section-header">
+      <span class="section-label">Sample data</span>
+      <button class="btn-back" id="btn-back-sample">&#x2190; Back</button>
+    </div>
+    <p class="sample-note">This is the raw bank statement that will be analysed. Nothing is uploaded and no AI request is made &mdash; the breakdown is pre-computed from this exact data.</p>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Description</th><th>Amount</th></tr></thead>
+          <tbody id="sample-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="demo-actions">
+      <button class="btn-upload" type="button" id="btn-analyze-demo">Analyze</button>
+    </div>
+  </section>
+
   <!-- ── Loading ──────────────────────────────────────────────── -->
   <section id="loading-section">
     <div class="spinner"></div>
-    <p class="loading-title">Analysing your finances&hellip;</p>
+    <p class="loading-title" id="loading-title">Analysing your finances&hellip;</p>
     <p class="loading-sub">AI is categorising transactions and spotting patterns</p>
   </section>
 
@@ -634,8 +663,10 @@ const $upload   = document.getElementById('upload-section');
 const $loading  = document.getElementById('loading-section');
 const $dash     = document.getElementById('dashboard-section');
 const $fallback = document.getElementById('fallback-section');
+const $sample   = document.getElementById('sample-section');
 const $drop     = document.getElementById('drop-zone');
 const $file     = document.getElementById('file-input');
+const $loadingTitle = document.getElementById('loading-title');
 
 /* ── Section switcher ─────────────────────────────────────────── */
 function show(name) {
@@ -643,6 +674,7 @@ function show(name) {
   $loading.style.display  = name === 'loading'  ? 'flex'  : 'none';
   $dash.style.display     = name === 'dash'     ? 'block' : 'none';
   $fallback.style.display = name === 'fallback' ? 'block' : 'none';
+  $sample.style.display   = name === 'sample'   ? 'block' : 'none';
 }
 
 /* ── Upload wiring ────────────────────────────────────────────── */
@@ -663,6 +695,100 @@ $file.addEventListener('change', (e) => { if (e.target.files[0]) handleFile(e.ta
 
 document.getElementById('btn-back').addEventListener('click', () => { $file.value = ''; show('upload'); });
 document.getElementById('btn-back-fallback').addEventListener('click', () => { $file.value = ''; show('upload'); });
+
+/* ── Sample demo flow (zero API calls: static CSV + static JSON) ── */
+const REAL_LOADING_TITLE = 'Analysing your finances…';
+const DEMO_LOADING_TITLE = 'Analyzing your spending…';
+
+document.getElementById('btn-demo').addEventListener('click', showSample);
+document.getElementById('btn-analyze-demo').addEventListener('click', runSampleAnalysis);
+document.getElementById('btn-back-sample').addEventListener('click', () => show('upload'));
+
+// Step 1: load the static sample CSV and show its rows as the "Sample data" table.
+async function showSample() {
+  try {
+    const res = await fetch('sample_statement.csv', { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    renderSampleTable(parseSampleRows(await res.text()), '£');
+    show('sample');
+  } catch (err) {
+    console.error('Could not load sample statement:', err);
+    alert('Sorry, the sample statement could not be loaded.');
+  }
+}
+
+// Step 2: brief fake "analysing" state, then render the PRE-SAVED result through
+// the exact same paint()/show('dash') path a real analysis uses. No API call.
+function runSampleAnalysis() {
+  $loadingTitle.textContent = DEMO_LOADING_TITLE;
+  show('loading');
+  setTimeout(async () => {
+    try {
+      const res = await fetch('demo-result.json', { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      paint(data);
+      show('dash');
+    } catch (err) {
+      console.error('Could not load demo result:', err);
+      show('sample');
+      alert('Sorry, the sample analysis could not be loaded.');
+    } finally {
+      $loadingTitle.textContent = REAL_LOADING_TITLE;   // leave the real upload flow untouched
+    }
+  }, 1500);
+}
+
+// Display-only parser for the sample table (handles Money In/Out and signed
+// Amount columns). Real-analysis parsing lives server-side in api/lib/parse.js.
+function parseSampleRows(text) {
+  const lines = text.replace(/\r/g, '').split('\n').filter((l) => l.trim());
+  if (lines.length < 2) return [];
+  const hdrs = splitLine(lines[0]).map((h) => h.toLowerCase().trim());
+  const di = findIdx(hdrs, ['date', 'posted']);
+  const xi = findIdx(hdrs, ['description', 'desc', 'narrative', 'details', 'payee', 'memo', 'reference', 'narration', 'name']);
+  const oi = findIdx(hdrs, ['money out', 'paid out', 'debit', 'withdrawal']);
+  const ii = findIdx(hdrs, ['money in', 'paid in', 'credit', 'deposit']);
+  const ai = findIdx(hdrs, ['amount', 'value', 'transaction amount']);
+  const cleanNum = (raw) => parseFloat(String(raw == null ? '' : raw).replace(/[\xA3$€,\s]/g, ''));
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = splitLine(lines[i]);
+    let amount, direction;
+    if (oi >= 0 || ii >= 0) {
+      const out = oi >= 0 ? cleanNum(cols[oi]) : NaN;
+      const inc = ii >= 0 ? cleanNum(cols[ii]) : NaN;
+      if (!isNaN(out) && out !== 0) { amount = Math.abs(out); direction = 'out'; }
+      else if (!isNaN(inc) && inc !== 0) { amount = Math.abs(inc); direction = 'in'; }
+      else continue;
+    } else if (ai >= 0) {
+      const v = cleanNum(cols[ai]);
+      if (isNaN(v) || v === 0) continue;
+      amount = Math.abs(v); direction = v < 0 ? 'out' : 'in';
+    } else continue;
+    rows.push({
+      date: (cols[di >= 0 ? di : 0] || '').trim(),
+      description: (cols[xi >= 0 ? xi : 1] || '').trim(),
+      amount, direction,
+    });
+  }
+  return rows;
+}
+
+function renderSampleTable(rows, cur) {
+  const tbody = document.getElementById('sample-tbody');
+  tbody.innerHTML = '';
+  rows.forEach((r) => {
+    const cls = r.direction === 'in' ? 'pos' : 'neg';
+    const sign = r.direction === 'in' ? '+' : '−';
+    tbody.insertAdjacentHTML('beforeend',
+      '<tr>' +
+        '<td>' + esc(r.date || '—') + '</td>' +
+        '<td>' + esc(r.description || '—') + '</td>' +
+        '<td class="' + cls + '">' + sign + money(r.amount, cur) + '</td>' +
+      '</tr>');
+  });
+}
 
 /* ── File reading helpers ─────────────────────────────────────── */
 const TEXT_EXTS = ['csv', 'tsv', 'txt', 'ofx', 'qfx', 'qif'];
