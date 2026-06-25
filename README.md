@@ -22,25 +22,6 @@ Upload a bank statement and Money X-Ray gives you an instant, plain-English brea
 
 > The live site runs in demo mode on a sample statement, so anyone can try it for free. To analyse your own statement, deploy your own copy with your own API key (instructions below).
 
-## How it works
-
-Money X-Ray splits the work between the AI and the code, deliberately:
-
-- The **AI reads and judges** — it categorises each transaction (groceries, transport, subscriptions, etc.) and flags what counts as spending versus transfers or income.
-- The **code does all the maths** — every total, category sum, and projection is calculated in code, never by the AI.
-
-This matters: language models are unreliable at arithmetic, so Money X-Ray never lets the AI add anything up. The AI labels; the code counts. That's why the totals always reconcile exactly.
-
-The flow: parse the statement into transactions → AI classifies each one → code aggregates the totals → results render as a breakdown.
-
-## Features
-
-- Spending breakdown by category with a doughnut chart
-- Subscription detection with annual cost totals
-- 1-year financial runway projection
-- Honest handling of transfers, income, and refunds (excluded from spending)
-- Graceful offline fallback if the API is unavailable
-
 ## Deploy your own copy
 
 To run Money X-Ray on your own bank statements, deploy your own copy with your own Anthropic API key. Your key stays private to your deployment, and your data never touches anyone else's server.
@@ -66,6 +47,25 @@ To run it on your own machine:
 3. Create a `.env` file with: `ANTHROPIC_API_KEY=your-key-here`
 4. Run with the Vercel CLI: `vercel dev`
 5. Open the local URL it gives you (usually `http://localhost:3000`).
+
+## How it works
+
+Money X-Ray splits the work between the AI and the code, deliberately:
+
+- The **AI reads and judges** — it categorises each transaction (groceries, transport, subscriptions, etc.) and flags what counts as spending versus transfers or income.
+- The **code does all the maths** — every total, category sum, and projection is calculated in code, never by the AI.
+
+This matters: language models are unreliable at arithmetic, so Money X-Ray never lets the AI add anything up. The AI labels; the code counts. That's why the totals always reconcile exactly.
+
+The flow: parse the statement into transactions → AI classifies each one → code aggregates the totals → results render as a breakdown.
+
+## Features
+
+- Spending breakdown by category with a doughnut chart
+- Subscription detection with annual cost totals
+- 1-year financial runway projection
+- Honest handling of transfers, income, and refunds (excluded from spending)
+- Graceful offline fallback if the API is unavailable
 
 ## Roadmap
 
