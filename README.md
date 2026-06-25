@@ -24,7 +24,7 @@ Upload a bank statement and Money X-Ray gives you an instant, plain-English brea
 
 ## Deploy your own copy
 
-To run Money X-Ray on your own bank statements, deploy your own copy with your own Anthropic API key. Your key stays private to your deployment, and your data never touches anyone else's server.
+To run Money X-Ray on your own bank statements and deploy your own copy - you will need your own **Anthropic API key**. Your key stays private to your deployment, and your data never touches anyone else's server.
 
 1. **Fork this repo** to your own GitHub account (Fork button, top right).
 2. **Import it into Vercel** at [vercel.com/new](https://vercel.com/new) and select your forked repo.
