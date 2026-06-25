@@ -47,7 +47,7 @@ To run it on your own machine:
 2. Install dependencies: `npm install`
 3. Create a `.env` file with: `ANTHROPIC_API_KEY=your-key-here`
 4. Run with the Vercel CLI: `vercel dev`
-5. Open the local URL it gives you (usually `http://localhost:3000`).
+5. Open the local URL it gives you (usually `http://localhost:3000`)
 
 ## How it works
 
