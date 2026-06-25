@@ -211,8 +211,8 @@
     }
     .btn-upload:active { transform: translateY(0); }
     .sample-hint { font-size: .8rem; color: var(--muted); margin-top: 1rem; }
-    .sample-hint a { color: var(--accent); font-weight: 600; text-decoration: none; }
-    .sample-hint a:hover { text-decoration: underline; }
+    .sample-hint a, .sample-note a { color: var(--accent); font-weight: 600; text-decoration: none; }
+    .sample-hint a:hover, .sample-note a:hover { text-decoration: underline; }
     #file-input { display: none; }
 
     .demo-cta { text-align: center; }
@@ -534,7 +534,7 @@
       <span class="section-label">Sample data</span>
       <button class="btn-back" id="btn-back-sample">&#x2190; Back</button>
     </div>
-    <p class="sample-note">This is the raw bank statement that will be analysed. Nothing is uploaded and no AI request is made &mdash; the breakdown is pre-computed from this exact data.</p>
+    <p class="sample-note">This is for illustrative purposes only &mdash; to analyse your own statements, you may deploy your own copy using your API key. Check out the <a href="https://github.com/kalelmoura/moneyXray" target="_blank" rel="noopener">README</a> for instructions.</p>
     <div class="card">
       <div class="table-wrap">
         <table>
