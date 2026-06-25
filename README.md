@@ -10,7 +10,7 @@
 
 **AI-powered bank statement analysis in seconds.**
 
-[Live demo](https://money-xray.vercel.app) · Built with Claude, JavaScript & Vercel
+[Live demo](https://money-xray.vercel.app) · Built with JavaScript, Claude & Vercel
 
 </div>
 
