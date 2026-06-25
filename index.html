@@ -219,6 +219,7 @@
     .demo-actions { text-align: center; margin-top: 1.75rem; }
     .demo-cta .btn-upload, .demo-actions .btn-upload { margin-top: 0; }
     .sample-note { color: var(--sub); font-size: .92rem; line-height: 1.6; margin-bottom: 1.25rem; max-width: 640px; }
+    body.demo-mode .drop-zone { display: none; }
 
     .trust-row {
       display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center;
@@ -703,6 +704,14 @@ const DEMO_LOADING_TITLE = 'Analyzing your spending…';
 document.getElementById('btn-demo').addEventListener('click', showSample);
 document.getElementById('btn-analyze-demo').addEventListener('click', runSampleAnalysis);
 document.getElementById('btn-back-sample').addEventListener('click', () => show('upload'));
+
+// Mode switch: ask the server whether this is the public demo deployment.
+// demoMode hides the real uploader, leaving only the sample demo flow. Any
+// failure falls back to full mode, so an own-copy deploy is never broken.
+fetch('/api/config', { cache: 'no-store' })
+  .then((r) => (r.ok ? r.json() : null))
+  .then((cfg) => { if (cfg && cfg.demoMode) document.body.classList.add('demo-mode'); })
+  .catch(() => {});
 
 // Step 1: load the static sample CSV and show its rows as the "Sample data" table.
 async function showSample() {

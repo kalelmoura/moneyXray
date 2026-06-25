@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { parseStatement, detectCurrency } from './lib/parse.js';
 import { classifyTransactions, extractFromPdf, writeSummary } from './lib/classify.js';
 import { aggregate } from './lib/aggregate.js';
+import { isDemoMode } from './lib/demo.js';
 
 // Orchestrator only. The real work lives in lib/:
 //   parse (code)  ->  classify (AI, labels only)  ->  aggregate (code, all maths)
@@ -9,6 +10,12 @@ import { aggregate } from './lib/aggregate.js';
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // On the public demo deployment, real analysis is disabled so the demo's
+  // API key can't be spent. Own-copy deploys (DEMO_MODE unset) are unaffected.
+  if (isDemoMode()) {
+    return res.status(403).json({ error: 'This is a demo deployment — real uploads are disabled. Deploy your own copy with your own API key to analyse real statements.' });
   }
 
   const { text, csv, pdf, mediaType } = req.body || {};
