@@ -1,0 +1,122 @@
+{
+  "currency": "£",
+  "totalSpend": 925.47,
+  "totalIncome": 2184.99,
+  "avgMonthlySpend": 925.47,
+  "periodMonths": 1,
+  "categories": [
+    {
+      "name": "Groceries",
+      "emoji": "🛒",
+      "total": 283.2,
+      "transactionCount": 6,
+      "percentage": 30.6
+    },
+    {
+      "name": "Transport",
+      "emoji": "🚌",
+      "total": 224.3,
+      "transactionCount": 7,
+      "percentage": 24.2
+    },
+    {
+      "name": "Shopping",
+      "emoji": "🛍️",
+      "total": 148.74,
+      "transactionCount": 3,
+      "percentage": 16.1
+    },
+    {
+      "name": "Eating Out & Takeaway",
+      "emoji": "🍽️",
+      "total": 121.8,
+      "transactionCount": 9,
+      "percentage": 13.2
+    },
+    {
+      "name": "Entertainment",
+      "emoji": "🎬",
+      "total": 63.94,
+      "transactionCount": 6,
+      "percentage": 6.9
+    },
+    {
+      "name": "Bills & Utilities",
+      "emoji": "📱",
+      "total": 40.5,
+      "transactionCount": 2,
+      "percentage": 4.4
+    },
+    {
+      "name": "Health & Fitness",
+      "emoji": "💪",
+      "total": 24.99,
+      "transactionCount": 1,
+      "percentage": 2.7
+    },
+    {
+      "name": "Other",
+      "emoji": "📦",
+      "total": 18,
+      "transactionCount": 1,
+      "percentage": 1.9
+    }
+  ],
+  "subscriptions": [
+    {
+      "name": "Pure GYM LTD",
+      "emoji": "💪",
+      "monthlyAmount": 24.99,
+      "annualCost": 299.88
+    },
+    {
+      "name": "Vodafone LTD",
+      "emoji": "📱",
+      "monthlyAmount": 22,
+      "annualCost": 264
+    },
+    {
+      "name": "EE Limited",
+      "emoji": "📱",
+      "monthlyAmount": 18.5,
+      "annualCost": 222
+    },
+    {
+      "name": "Anthropic claude.ai",
+      "emoji": "📦",
+      "monthlyAmount": 18,
+      "annualCost": 216
+    },
+    {
+      "name": "netflix.com",
+      "emoji": "🎬",
+      "monthlyAmount": 15.99,
+      "annualCost": 191.88
+    },
+    {
+      "name": "Spotify",
+      "emoji": "🎬",
+      "monthlyAmount": 11.99,
+      "annualCost": 143.88
+    },
+    {
+      "name": "Amazon",
+      "emoji": "🎬",
+      "monthlyAmount": 8.99,
+      "annualCost": 107.88
+    },
+    {
+      "name": "Disney Plus",
+      "emoji": "🎬",
+      "monthlyAmount": 8.99,
+      "annualCost": 107.88
+    },
+    {
+      "name": "apple.com/bill",
+      "emoji": "🎬",
+      "monthlyAmount": 2.99,
+      "annualCost": 35.88
+    }
+  ],
+  "summary": "You've had a brilliant month, saving £1259.52 from your income of £2184.99 while spending £925.47, with groceries (£283.20) and transport (£224.30) being your biggest expenses. Your 9 subscriptions are costing £1589.28 annually, which works out to about £132 per month — consider auditing these to see if you're actively using each one, as cutting even a couple could free up meaningful savings. Keep up this positive momentum, as your savings rate this month is genuinely impressive!"
+}
