@@ -730,9 +730,23 @@ async function showSample() {
   }
 }
 
+// Load the Kit modal signup popup once, triggered by the "Analyze" click. The
+// form's own Kit timer (~5s) then shows it shortly after, as the results render.
+var signupPopupLoaded = false;
+function loadSignupPopup() {
+  if (signupPopupLoaded) return;
+  signupPopupLoaded = true;
+  var s = document.createElement('script');
+  s.async = true;
+  s.setAttribute('data-uid', 'f505a6b542');
+  s.src = 'https://gabriel-moura.kit.com/f505a6b542/index.js';
+  document.body.appendChild(s);
+}
+
 // Step 2: brief fake "analysing" state, then render the PRE-SAVED result through
 // the exact same paint()/show('dash') path a real analysis uses. No API call.
 function runSampleAnalysis() {
+  loadSignupPopup();
   $loadingTitle.textContent = DEMO_LOADING_TITLE;
   show('loading');
   setTimeout(async () => {
@@ -1090,19 +1104,6 @@ function esc(s) {
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-</script>
-
-<!-- Kit "Modal" popup form. The form's own Kit timer is 5s (counted from when
-     its script runs), so we inject the script 5s after load to make the modal
-     appear at ~10s total. If the Kit timer changes, set delay = 10000 - kitTimer. -->
-<script>
-  setTimeout(function () {
-    var s = document.createElement('script');
-    s.async = true;
-    s.setAttribute('data-uid', 'f505a6b542');
-    s.src = 'https://gabriel-moura.kit.com/f505a6b542/index.js';
-    document.body.appendChild(s);
-  }, 5000);
 </script>
 </body>
 </html>
